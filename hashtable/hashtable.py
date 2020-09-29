@@ -28,8 +28,11 @@ class HashTable():
 
     def __init__(self, capacity):
         # Your code here
-        self.bucket_array = [None for i in range(capacity)]
+        self.total_items = 0
         self.capacity = capacity
+        self.bucket_array = [None for i in range(capacity)]
+        
+        
 
 
 
@@ -44,6 +47,7 @@ class HashTable():
         Implement this.
         """
         # Your code here
+        return self.capacity
 
 
     def get_load_factor(self):
@@ -53,7 +57,7 @@ class HashTable():
         Implement this.
         """
         # Your code here
-
+        return self.total_items / self.capacity
 
     def fnv1(self, key):
         """
@@ -97,6 +101,10 @@ class HashTable():
         Implement this.
         """
         # Your code here
+        self.total_items +=1  
+        load_factor = self.get_load_factor()
+ 
+
         key_hash = self.djb2(key)
         bucket_index = key_hash % self.capacity
 
@@ -117,6 +125,14 @@ class HashTable():
             last_entry.next = new_entry
         else:
             self.bucket_array[bucket_index] = new_entry
+        load_factor = self.get_load_factor()
+
+        if load_factor >= 0.7:
+            self.resize(self.capacity * 2)   
+        load_factor = self.get_load_factor() 
+        print(self.capacity, load_factor)
+        
+
 
     def debug_print(self):
         for i in range(self.capacity):
@@ -138,6 +154,7 @@ class HashTable():
         Implement this.
         """
         # Your code here
+        self.total_items -= 1
         key_hash = self.djb2(key)
         bucket_index = key_hash % self.capacity
 
@@ -181,7 +198,70 @@ class HashTable():
         Implement this.
         """
         # Your code here
+        new_arr = [None for i in range(0, new_capacity)]
         
+
+        for i in range(self.capacity):
+            node = self.bucket_array[i]
+            if node:
+                while node:
+                    key_hash = self.djb2(node.key)
+                    bucket_index = key_hash % new_capacity
+
+                    new_entry = HashTableEntry(node.key, node.value)
+                    existing_entry = new_arr[bucket_index]
+
+                    if existing_entry:
+                        last_entry = None
+                        while existing_entry:
+                            if existing_entry.key == node.key:
+                                #found an existing key, replace the value
+                                existing_entry.value = node.value
+                                return
+                            last_entry = existing_entry
+                            existing_entry = existing_entry.next
+                        #past this point, we did not find an existing key
+                        #append to end of bucket
+                        last_entry.next = new_entry
+                    else:
+                        new_arr[bucket_index] = new_entry
+                    node = node.next  
+        self.capacity = new_capacity 
+        self.bucket_array = new_arr
+        '''
+        if self.load_factor >= 0.70:
+            self.capacity *= 2
+            for i in range(0, int(self.capacity / 2)):
+                self.bucket_array.append(None)
+            self.load_factor = self.total_items / self.capacity
+
+            for i in self.bucket_array:
+                
+                if i is not None:
+                    
+                    key_hash = self.djb2(i.key)
+                    bucket_index = key_hash % self.capacity
+
+                    new_entry = HashTableEntry(i.key, i.value)
+                    existing_entry = self.bucket_array[bucket_index]
+
+                    if existing_entry:
+                        last_entry = None
+                        while existing_entry:
+                            if existing_entry.key == i.key:
+                                #found an existing key, replace the value
+                                existing_entry.value = i.value
+                                return
+                            last_entry = existing_entry
+                            existing_entry = existing_entry.next
+                        #past this point, we did not find an existing key
+                        #append to end of bucket
+                        last_entry.next = new_entry
+                    else:
+                        self.bucket_array[bucket_index] = new_entry
+                        
+                    self.delete(i.key)
+        '''
 
 
 
@@ -201,8 +281,8 @@ if __name__ == "__main__":
     ht.put("line_10", "Long time the manxome foe he sought--")
     ht.put("line_11", "So rested he by the Tumtum tree")
     ht.put("line_12", "And stood awhile in thought.")
+    ht.resize(16)
     ht.debug_print()
-
     print("")
 
     # Test storing beyond capacity
