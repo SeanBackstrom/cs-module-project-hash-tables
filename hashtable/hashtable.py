@@ -1,18 +1,23 @@
-class HashTableEntry:
+class HashTableEntry():
     """
     Linked List hash table key/value pair
     """
-    def __init__(self, key, value):
+    def __init__(self, key, value, next = None):
         self.key = key
         self.value = value
-        self.next = None
+        self.next = next
+
+    def __str__(self):
+        return "'{}': '{}'".format(self.key, self.value)
+
+
 
 
 # Hash table can't have fewer than this many slots
 MIN_CAPACITY = 8
 
 
-class HashTable:
+class HashTable():
     """
     A hash table that with `capacity` buckets
     that accepts string keys
@@ -20,8 +25,12 @@ class HashTable:
     Implement this.
     """
 
+
     def __init__(self, capacity):
         # Your code here
+        self.bucket_array = [None for i in range(capacity)]
+        self.capacity = capacity
+
 
 
     def get_num_slots(self):
@@ -62,7 +71,13 @@ class HashTable:
 
         Implement this, and/or FNV-1.
         """
-        # Your code here
+        hash = 5381
+        byte_array = key.encode('utf-8')
+
+        for byte in byte_array:
+            hash = ((hash * 33) ^ byte) % 0x100000000
+
+        return hash
 
 
     def hash_index(self, key):
@@ -82,7 +97,37 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        key_hash = self.djb2(key)
+        bucket_index = key_hash % self.capacity
 
+        new_entry = HashTableEntry(key, value)
+        existing_entry = self.bucket_array[bucket_index]
+
+        if existing_entry:
+            last_entry = None
+            while existing_entry:
+                if existing_entry.key == key:
+                    #found an existing key, replace the value
+                    existing_entry.value = value
+                    return
+                last_entry = existing_entry
+                existing_entry = existing_entry.next
+            #past this point, we did not find an existing key
+            #append to end of bucket
+            last_entry.next = new_entry
+        else:
+            self.bucket_array[bucket_index] = new_entry
+
+    def debug_print(self):
+        for i in range(self.capacity):
+            node = self.bucket_array[i]
+            print('Bucket {}'.format(i))
+            if node:
+                while node:
+                    print('    {}'.format(node))
+                    node = node.next
+            else:
+                print('    Empty')
 
     def delete(self, key):
         """
@@ -93,6 +138,20 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        key_hash = self.djb2(key)
+        bucket_index = key_hash % self.capacity
+
+        existing_entry = self.bucket_array[bucket_index]
+        if existing_entry:
+            last_entry = None
+            while existing_entry:
+                if existing_entry.key == key:
+                    if last_entry:
+                        last_entry.next = existing_entry.next
+                    else:
+                        self.bucket_array[bucket_index] = existing_entry.next
+                last_entry = existing_entry
+                existing_entry = existing_entry.next
 
 
     def get(self, key):
@@ -104,7 +163,15 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        key_hash = self.djb2(key)
+        bucket_index = key_hash % self.capacity
 
+        existing_entry = self.bucket_array[bucket_index]
+        if existing_entry:
+            while existing_entry:
+                if existing_entry.key == key:
+                    return existing_entry.value
+                existing_entry = existing_entry.next
 
     def resize(self, new_capacity):
         """
@@ -114,6 +181,8 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        
+
 
 
 
@@ -132,6 +201,7 @@ if __name__ == "__main__":
     ht.put("line_10", "Long time the manxome foe he sought--")
     ht.put("line_11", "So rested he by the Tumtum tree")
     ht.put("line_12", "And stood awhile in thought.")
+    ht.debug_print()
 
     print("")
 
